@@ -1,0 +1,14 @@
+{
+  "name": "jquery-scroller",
+  "version": "0.0.0",
+  "main": "jquery-scroller.js",
+  "dependencies": {
+    "bower": "1.2.8",
+    "http-server": "0.6.1"
+  },
+  "scripts": {
+  	"start": "./node_modules/http-server/bin/http-server ."
+  },
+  "author": "genehallman",
+  "license": "BSD-2-Clause"
+}

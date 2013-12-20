@@ -1,0 +1,9 @@
+{
+  "name": "jquery-scroller",
+  "version": "0.0.1",
+  "main": ["./jquery-scroller.js"],
+  "ignore": ["**/.*"],
+  "dependencies": {
+    "jquery": ">= 1.10.2"
+  }
+}

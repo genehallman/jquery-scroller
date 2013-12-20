@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <title>jquery=scroller example</title>
+    <script src="./bower_components/jquery/jquery.min.js" type="text/javascript"></script>
+    <script src="./jquery-scroller.js" type="text/javascript"></script>
+    <link href="./jquery-scroller.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <div id="container">
+      <div id="welcome">Welcome to my awesome scrolly.</div>
+      <div id="welcome2">Welcome22222222222222222222222</div>
+    </div>
+    <script type="text/javascript">
+      $(function() {
+        var changeText = function() { 
+          var scroll = $('body').scrollTop();
+          console.log(scroll);
+          if (scroll > 405) {
+            $('#welcome').text("changed this on ya");
+          } else {
+            $('#welcome').text("Welcome to my awesome scrolly.");
+          }
+        };
+
+        setTimeout(function() {
+          changeText();
+          $('#welcome').scroller({opacity:0}, { top: 200, bottom: 400, callback: changeText });
+          $('#welcome').scroller({opacity:1}, { top: 410, bottom: 600, callback: changeText });
+          $('#welcome2').scroller({left:0}, { top: 450, bottom: 800 });
+          
+        }, 10);
+      });
+    </script>
+  </body>
+</html>
