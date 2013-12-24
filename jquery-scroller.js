@@ -1,94 +1,100 @@
 (function ( $ ) {
-  var states = [];
-  var started = false;
-  var body = null;
+  var scrollers = {};
 
-  var stepFn = function(state, scroll, height, trigger_callback) {
-    return function() {
-      if (state['top'] > scroll) {
-        state.el.css(state['orig_properties']);
-        if (trigger_callback) { state['callback'].call(state.el, 'above', state); }
+  var stepFn = function(states, scroll, height) {
+        
+    var current = $.extend({}, states[0].orig_properties);
+    
+    for (var i in states) {
+      var state = states[i];
+      console.log("logger", states[0]);
+
+
+      if (scroll <= state.top) {
+        console.log("pre state " + i, current);
+        state.el.css(current);
         return;
-      }
-      if (state['bottom'] < scroll) {
-        state.el.css(state['properties']);
-        if (trigger_callback) { state['callback'].call(state.el, 'below', state); }
-        return;
-      }
+      } else if (scroll > state.top && scroll < state.bottom) {
+        console.log("mid state " + i, current);
+        var new_props = {};
+        var ratio = (scroll - state.top) / (state.bottom - state.top);
 
-      var top = state['top'],
-        bottom = state['bottom'],
-        new_props = {};
-
-      var ratio = (scroll - top) / (bottom - top);
-      for (var key in state['properties']) {
-        new_props[key] = parseInt(state['orig_properties'][key], 10) +
-          (ratio * (parseInt(state['properties'][key], 10) - parseInt(state['orig_properties'][key], 10)));
-      }
-      state.el.css(new_props);
-    };
-  };
-
-  var startScroller = function() {
-    started = setInterval(function() {
-      var scroll = body.scrollTop();
-      var height = body.height();
-      
-      for (var i in states) {
-
-        if (states[i]['top'] <= scroll && states[i]['bottom'] >= scroll) {
-          if (!states[i]['animating']) {
-            states[i]['animating'] = true;
-          }
-        } else if (states[i]['animating']) {
-          states[i]['animating'] = false;
-          stepFn(states[i], scroll, height, true)();
+        for (var key in state.properties) {
+          new_props[key] = parseInt(current[key], 10) +
+            (ratio * (parseInt(state.properties[key], 10) - parseInt(current[key], 10)));
         }
-
-        if (states[i]['animating']) {
-          stepFn(states[i], scroll, height)();
+        state.el.css(new_props);
+        return;
+      } else if (scroll >= state.bottom) {
+        $.extend(current, state.properties);
+        if (i == states.length - 1) {
+          console.log("post state " + i, current);
+          state.el.css(current);
+          return;
         }
       }
-    }, 10);
+    }
   };
+
+  $(window).scroll(function() {
+      var scroll = $(document).scrollTop() + ($(window).height()/2);
+      var height = $(document).height();
+
+      console.log(Math.round(scroll/height * 100));
+
+      for (var selector in scrollers) {
+        if (selector != "#welcome") {
+          var old_log = console.log;
+          console.log = function() {};
+        }
+        
+        console.log(selector);
+        stepFn(scrollers[selector], scroll, height);
+
+        if (selector != "#welcome") {
+          console.log = old_log;
+        }
+
+      }
+  });
   
   $.fn.scroller = function(properties, options) {
-    if (!body) {
-      body = $('body');
-    }
     var keys = [],
-      scroll = body.scrollTop(),
-      height = body.height(),
+      scroll = $(document).scrollTop() + ($(window).height()/2),
+      height = $(document).height(),
       top = options['top'] || 0,
       bottom = options['bottom'] || height;
 
     for(var k in properties) {
       keys.push(k);
     }
-    if (top && typeof(top) == "string"  &&
-      top.charAt(top.length-1) == "%") {
-      top = height * parseInt(top, 10) / 100;
+
+    if (typeof(top) == "string" && top.charAt(top.length-1) == "%") {
+      top = height * parseFloat(top) / 100;
     }
-    if (bottom && typeof(bottom) == "string"  &&
-      bottom.charAt(bottom.length-1) == "%") {
-      bottom = height * parseInt(bottom, 10) / 100;
+    if (typeof(bottom) == "string" && bottom.charAt(bottom.length-1) == "%") {
+      bottom = height * parseFloat(bottom) / 100;
     }
 
-    states.push({
+
+    if (!scrollers[this.selector]) {
+      console.log("creating...");
+      scrollers[this.selector] = [];
+    }
+    console.log(this.selector);
+    scrollers[this.selector].push({
       top: top,
       bottom: bottom,
       options: options,
-      el: this,
       animating: false,
       properties: properties,
       orig_properties: this.css(keys),
-      callback: options['callback'] || function() {console.log(arguments[0])}
+      keys: keys,
+      el: this
     });
-    stepFn(states[states.length -1], scroll, height)();
     
-    if (!started) {
-      startScroller();
-    }
+    stepFn(scrollers[this.selector], scroll, height);
+    
     return this;
   };
 
